@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 class NumeroPortasException(Exception):
     def __init__(self, msg):
         super().__init__(msg)
@@ -36,7 +34,6 @@ class ChainingHashTable:
 
     def put(self, key, data):
         slot = self.hash(key)
-
 
         for entry in self.table[slot]:
             if key == entry.key:
@@ -77,6 +74,18 @@ class ChainingHashTable:
                     result.append(entry.key)
         return result
 
+    def contains(self, key):
+        entry = self.__locate(key)
+        return isinstance(entry, Entrada)
+
+    def __locate(self, key):
+        slot = self.hash(key)
+        for i in range(len(self.table[slot])):
+            if key == self.table[slot][i].key:
+                return self.table[slot][i]
+        else:
+            return None
+
     def remove(self, key):
         slot = self.hash(key)
         for i in range(len(self.table[slot])):
@@ -87,7 +96,6 @@ class ChainingHashTable:
         raise AbsentKeyException(f'Chave {key} não está presente na tabela hash')
 
     def displayTable(self):
-        print('Endereço IP ------- Endereço Físico')
         for items in self.table:
             if len(items) == 0:
                 print('None')
@@ -109,26 +117,28 @@ class Dispositivo:
     @mac.setter
     def mac(self, mac):
         self.__mac = mac
+        macsplit = self.__mac.split(":")
+        if len(macsplit) < 6:
+            raise EnderecoMacInvalidoException("Endereço MAC inválido. Por favor use um endereço válido. ")
 
     def __str__(self):
-        return "(%s|%s)" % (self.ip, self.mac)
+        return "%s" % (self.ip)
 
     def __hash__(self):
         return hash(self.ip)
 
 
 class Computador(Dispositivo):
-    def __init__(self, nome, ip, mac, arp=list()):
+    def __init__(self, nome, ip, mac):
         super().__init__(ip, mac)
         self.nome = nome
-        self.arp = ChainingHashTable(10)
-
-
+        self.arp = ChainingHashTable(6)
 
 class Switch(Dispositivo):
     def __init__(self, nportas, ip, mac):
         super().__init__(ip, mac)
         self.__nportas = nportas
+        self.tabelaroteamento = ChainingHashTable(self.__nportas)
 
     @property
     def nportas(self):
@@ -136,41 +146,7 @@ class Switch(Dispositivo):
 
     @nportas.setter
     def nportas(self, nportas):
-        if nportas != 4 and 8 and 16 and 24:
+        portasvalidas = [4, 8, 16, 24]
+        if nportas not in portasvalidas:
             raise NumeroPortasException('Número de portas invalido. Por favor insira um número válido.')
-
         self.__nportas = nportas
-
-
-class Grafo:
-    def __init__(self, arestas, direcionado=False):
-        self.adj = defaultdict(set)
-        self.direcionado = direcionado
-        self.adiciona_arestas(arestas)
-
-    def get_vertices(self):
-        return list(self.adj.keys())
-
-    def get_arestas(self):
-        return [(k, v) for k in self.adj.keys() for v in self.adj[k]]
-
-    def adiciona_arestas(self, arestas):
-        for u, v in arestas:
-            self.adiciona_arco(u, v)
-
-    def adiciona_arco(self, u, v):
-        self.adj[u].add(v)
-        if not self.direcionado:
-            self.adj[v].add(u)
-
-    def existe_aresta(self, u, v):
-        return u in self.adj and v in self.adj[u]
-
-    def __len__(self):
-        return len(self.adj)
-
-    def __str__(self):
-        return '{}({})'.format(self.__class__.name, dict(self.adj))
-
-    def __getitem__(self, v):
-        return self.adj[v]
