@@ -133,12 +133,39 @@ class Computador(Dispositivo):
         super().__init__(ip, mac)
         self.nome = nome
         self.arp = ChainingHashTable(6)
+        
+    def addTabelaArp(self, grafo, dispositivo_fonte):
+        visitados, fila = set(), [dispositivo_fonte]
+        listaipvisitados = []
+        while fila:
+            dispositivo = fila.pop(0)
+            if dispositivo.ip not in listaipvisitados:
+                listaipvisitados.append(dispositivo.ip)
+                dispositivo_fonte.arp.put(hash(dispositivo), dispositivo.mac)
+            for vizinho in grafo[dispositivo]:
+                if vizinho not in visitados:
+                    visitados.add(vizinho)
+                    fila.append(vizinho)
 
+                    
 class Switch(Dispositivo):
     def __init__(self, nportas, ip, mac):
         super().__init__(ip, mac)
         self.__nportas = nportas
         self.tabelaroteamento = ChainingHashTable(self.__nportas)
+        
+    def addTabelaRoteamento(self, grafo, dispositivo_fonte):
+        visitados, fila = set(), [dispositivo_fonte]
+        listamacs = []
+        while fila:
+            dispositivo = fila.pop(0)
+            if grafo.existe_aresta(dispositivo_fonte, dispositivo) is True and dispositivo.mac not in listamacs:
+                listamacs.append(dispositivo.mac)
+                dispositivo_fonte.tabelaroteamento.put(hash(dispositivo), dispositivo.mac)
+            for vizinho in grafo[dispositivo]:
+                if vizinho not in visitados:
+                    visitados.add(vizinho)
+                    fila.append(vizinho)
 
     @property
     def nportas(self):
