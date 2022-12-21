@@ -43,7 +43,7 @@ class ChainingHashTable:
         self.table[slot].append(Entrada(key, data))
         return slot
 
-    def get(self, key):
+    def getMac(self, key):
         slot = self.hash(key)
         for i in range(len(self.table[slot])):
             if key == self.table[slot][i].key:
@@ -107,8 +107,16 @@ class ChainingHashTable:
 
 class Dispositivo:
     def __init__(self, ip, mac):
-        self.ip = ip
+        self.__ip = ip
         self.__mac = mac
+        
+    @property
+    def ip(self):
+        return self.__ip
+    
+    @ip.setter
+    def ip(self, ip):
+        self.__ip = ip
 
     @property
     def mac(self):
@@ -116,10 +124,10 @@ class Dispositivo:
 
     @mac.setter
     def mac(self, mac):
-        self.__mac = mac
-        macsplit = self.__mac.split(":")
+        macsplit = mac.split(":")
         if len(macsplit) < 6:
             raise EnderecoMacInvalidoException("Endereço MAC inválido. Por favor use um endereço válido. ")
+        self.__mac = mac
 
     def __str__(self):
         return "%s" % (self.ip)
@@ -133,7 +141,7 @@ class Computador(Dispositivo):
         super().__init__(ip, mac)
         self.nome = nome
         self.arp = ChainingHashTable(6)
-        
+
     def addTabelaArp(self, grafo, dispositivo_fonte):
         visitados, fila = set(), [dispositivo_fonte]
         listaipvisitados = []
@@ -147,13 +155,24 @@ class Computador(Dispositivo):
                     visitados.add(vizinho)
                     fila.append(vizinho)
 
-                    
+
 class Switch(Dispositivo):
-    def __init__(self, nportas, ip, mac):
+    def __init__(self, ip, mac):
         super().__init__(ip, mac)
+        self.__nportas = 4
+        self.tabela_roteamento = ChainingHashTable(self.__nportas)
+
+    @property
+    def nportas(self):
+        return self.__nportas
+
+    @nportas.setter
+    def nportas(self, nportas):
+        portasvalidas = [4, 8, 16, 24]
+        if nportas not in portasvalidas:
+            raise NumeroPortasException('Número de portas invalido. Por favor insira um número válido.')
         self.__nportas = nportas
-        self.tabelaroteamento = ChainingHashTable(self.__nportas)
-        
+
     def addTabelaRoteamento(self, grafo, dispositivo_fonte):
         visitados, fila = set(), [dispositivo_fonte]
         listamacs = []
@@ -167,13 +186,3 @@ class Switch(Dispositivo):
                     visitados.add(vizinho)
                     fila.append(vizinho)
 
-    @property
-    def nportas(self):
-        return self.__nportas
-
-    @nportas.setter
-    def nportas(self, nportas):
-        portasvalidas = [4, 8, 16, 24]
-        if nportas not in portasvalidas:
-            raise NumeroPortasException('Número de portas invalido. Por favor insira um número válido.')
-        self.__nportas = nportas
