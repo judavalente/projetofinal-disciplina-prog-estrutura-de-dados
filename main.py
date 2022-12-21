@@ -1,5 +1,5 @@
-from dispositivos import Computador, Switch, Grafo
-from time import sleep
+from dispositivos import Computador, Switch
+from navegacao import Grafo
 
 pc1 = Computador("PC1", "192.168.0.12", "77:87:01:0C:1E:A6")
 pc2 = Computador("PC2", "192.168.0.10", "41:12:96:A0:E2:7E")
@@ -16,3 +16,5 @@ pc1.arp.displayTable()
 print("--------------------")
 switch1.addTabelaRoteamento(dispositivos, switch2)
 switch.tabela_roteamento.displayTable()
+print("--------------------")
+
